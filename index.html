@@ -3,53 +3,155 @@
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Construyamos juntos nuestro comedor</title>
+    <title>Construyamos juntos nuestro comedor</title>
 
-<link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css">
 
 </head>
 
 <body>
 
-<div class="container">
+    <header>
 
-    <h1>🍃 Construyamos juntos nuestro comedor</h1>
+        <h1>🍃 Construyamos juntos nuestro comedor</h1>
 
-    <p class="intro">
-        <strong>Cada silla representa un gesto de nuestra generosidad.</strong>
-    </p>
+        <p class="subtitulo">
+            Cada silla representa un gesto de nuestra generosidad.
+        </p>
 
-    <p class="intro2">
-        Cada aporte, sin importar el valor, ayudará a construir un lugar donde invitaremos a compartir cenas, amistad y muchas risas.
-    </p>
+        <p class="descripcion">
+            Cada aporte, sin importar el valor, ayudará a construir un lugar donde invitaremos a compartir cenas,
+            amistad y muchas risas.
+        </p>
 
-    <div class="progress-box">
+    </header>
+
+    <section class="resumen">
 
         <h2>Recaudado hasta ahora</h2>
 
-        <div class="money">$0</div>
+        <div id="dineroTotal" class="dinero">
 
-        <div class="progress-bar">
-
-            <div class="progress"></div>
+            $0
 
         </div>
 
-        <p>0% de $1.850.000</p>
+        <div class="barra">
 
-    </div>
+            <div id="barraProgreso" class="barra-interna"></div>
 
-    <div id="chairs" class="chairs-grid">
+        </div>
 
-    </div>
+        <div id="porcentajeGeneral">
 
+            0% de $1.850.000
+
+        </div>
+
+    </section>
+
+<div class="instrucciones">
+    💛 <strong>Haz doble clic</strong> en la silla que desees apoyar.<br>
+    Y no te pierdas lo que hay al final de la página... ❤️
 </div>
+    <main class="contenedor-comedor">
 
-<script src="data.js"></script>
-<script src="script.js"></script>
+        <img
+            src="assets/comedor.jpg"
+            class="foto-comedor"
+            alt="Comedor">
+
+        <div id="chairLayer"></div>
+
+    </main>
+
+
+
+    <!-- ========================= -->
+
+    <!-- MODAL -->
+
+    <!-- ========================= -->
+
+
+    <div id="modal" class="modal">
+
+        <div class="modal-card">
+
+            <span id="cerrarModal" class="cerrar">&times;</span>
+
+            <h2 id="tituloModal">
+
+            </h2>
+
+            <p id="textoModal">
+
+            </p>
+
+            <input
+                id="nombre"
+                type="text"
+                placeholder="Tu nombre">
+
+            <input
+                id="valor"
+                type="number"
+                placeholder="Valor del aporte (COP)">
+
+            <textarea
+                id="mensaje"
+                placeholder="Mensaje para la Sangha (opcional)"></textarea>
+                <input
+    id="email"
+    type="email"
+    placeholder="Tu correo electrónico">
+
+            <button id="btnEnviar">
+
+                ❤️ Reservar aporte
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <section class="generosidad">
+
+        <h2>
+
+            ❤️ Generosidad Compartida
+
+        </h2>
+
+        <div id="listaDonantes">
+
+            Aún no hay aportes registrados.
+
+        </div>
+
+    </section>
+
+
+
+    <footer>
+
+        <p>
+
+            Gracias!
+
+        </p>
+
+    </footer>
+
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
 
 </body>
 
