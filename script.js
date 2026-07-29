@@ -200,7 +200,7 @@ function abrirModalSilla(chair){
     donantes.forEach(d => {
 
         const esPropio = ultimoAporteIdTransaccion
-            && d.idTransaccion === ultimoAporteIdTransaccion;
+            && String(d.idTransaccion) === String(ultimoAporteIdTransaccion);
 
         const clase = "item-donacion" + (esPropio ? " aporte-propio" : "");
 
