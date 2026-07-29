@@ -28,6 +28,8 @@ let mensajeEstadoTimer = null;
 
 let sillaActual = null;
 
+let ultimoAporteIdTransaccion = null;
+
 let drag = null;
 
 let aportesPorSilla = {};
@@ -103,19 +105,39 @@ document.addEventListener("click", (e) => {
 
 function mostrarMensajeModal(tipo, texto){
 
-    mensajeEstado.className = "mensaje-estado " + tipo;
-
-    mensajeEstado.textContent = texto;
-
     if (mensajeEstadoTimer) clearTimeout(mensajeEstadoTimer);
 
-    mensajeEstadoTimer = setTimeout(() => {
+    mensajeEstado.className = "mensaje-estado " + tipo;
 
-        mensajeEstado.className = "mensaje-estado";
+    if (tipo === "exito") {
 
-        mensajeEstado.textContent = "";
+        mensajeEstado.innerHTML = "";
 
-    }, tipo === "exito" ? 4500 : 5500);
+        const textoEl = document.createElement("span");
+        textoEl.textContent = texto;
+
+        const btnOk = document.createElement("button");
+        btnOk.type = "button";
+        btnOk.className = "btn-ok-mensaje";
+        btnOk.textContent = "OK";
+        btnOk.onclick = ocultarMensajeModal;
+
+        mensajeEstado.appendChild(textoEl);
+        mensajeEstado.appendChild(btnOk);
+
+    } else {
+
+        mensajeEstado.textContent = texto;
+
+        mensajeEstadoTimer = setTimeout(() => {
+
+            mensajeEstado.className = "mensaje-estado";
+
+            mensajeEstado.textContent = "";
+
+        }, 5500);
+
+    }
 
 }
 
@@ -125,7 +147,7 @@ function ocultarMensajeModal(){
 
     mensajeEstado.className = "mensaje-estado";
 
-    mensajeEstado.textContent = "";
+    mensajeEstado.innerHTML = "";
 
 }
 
@@ -177,8 +199,13 @@ function abrirModalSilla(chair){
 
     donantes.forEach(d => {
 
+        const esPropio = ultimoAporteIdTransaccion
+            && d.idTransaccion === ultimoAporteIdTransaccion;
+
+        const clase = "item-donacion" + (esPropio ? " aporte-propio" : "");
+
         listaDonantes +=
-            `❤️ $${d.valor.toLocaleString("es-CO")}<br>`;
+            `<span class="${clase}">❤️ $${d.valor.toLocaleString("es-CO")}${esPropio ? " · ¡Tu aporte!" : ""}</span>`;
 
     });
 
@@ -188,10 +215,9 @@ function abrirModalSilla(chair){
 `Meta: <strong>$${chair.meta.toLocaleString("es-CO")}</strong><br>
 Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong>`;
 
-    listaAportesModal.innerHTML =
-`<strong>Aportes recibidos</strong><br>
-
-${listaDonantes || "Aún no hay aportes para esta silla."}`;
+    listaAportesModal.innerHTML = listaDonantes
+        ? `<strong>Aportes recibidos</strong><div class="grid-donaciones">${listaDonantes}</div>`
+        : `<strong>Aportes recibidos</strong><p class="sin-aportes">Aún no hay aportes para esta silla.</p>`;
 
     const metaAlcanzada = recaudado >= chair.meta && !esSangha;
 
@@ -296,7 +322,7 @@ if (esSangha && !todasLasDemasSillasCompletas()) {
 
 dibujarSillas();
 cargarEstado().finally(() => {
-    document.getElementById("contenedorComedor").classList.remove("cargando-inicial");
+    document.getElementById("overlayCargaPagina").classList.remove("visible");
 });
 
 
@@ -463,6 +489,8 @@ btnEnviar.onclick = async () => {
         const resultado = JSON.parse(texto);
 
         if (resultado.ok) {
+
+            ultimoAporteIdTransaccion = idTransaccion;
 
             document.getElementById("nombre").value = "";
 
