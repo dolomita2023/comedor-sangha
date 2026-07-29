@@ -16,6 +16,8 @@ const btnEnviar = document.getElementById("btnEnviar");
 
 const camposAporte = document.getElementById("camposAporte");
 
+const pagoInfo = document.getElementById("pagoInfo");
+
 let sillaActual = null;
 
 let drag = null;
@@ -164,6 +166,8 @@ if (metaAlcanzada) {
 
     camposAporte.style.display = "none";
 
+    pagoInfo.style.display = "none";
+
     btnEnviar.style.display = "none";
 
     textoModal.innerHTML +=
@@ -172,6 +176,8 @@ if (metaAlcanzada) {
 } else {
 
     camposAporte.style.display = "block";
+
+    pagoInfo.style.display = "flex";
 
     btnEnviar.style.display = "block";
 
