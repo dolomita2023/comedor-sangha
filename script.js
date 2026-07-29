@@ -18,6 +18,12 @@ const camposAporte = document.getElementById("camposAporte");
 
 const pagoInfo = document.getElementById("pagoInfo");
 
+const mensajeEstado = document.getElementById("mensajeEstado");
+
+const overlayCarga = document.getElementById("overlayCarga");
+
+let mensajeEstadoTimer = null;
+
 let sillaActual = null;
 
 let drag = null;
@@ -90,6 +96,122 @@ document.addEventListener("click", (e) => {
 });
 
 // ===============================
+// MENSAJES Y ESTADO DE CARGA DEL MODAL
+// ===============================
+
+function mostrarMensajeModal(tipo, texto){
+
+    mensajeEstado.className = "mensaje-estado " + tipo;
+
+    mensajeEstado.textContent = texto;
+
+    if (mensajeEstadoTimer) clearTimeout(mensajeEstadoTimer);
+
+    mensajeEstadoTimer = setTimeout(() => {
+
+        mensajeEstado.className = "mensaje-estado";
+
+        mensajeEstado.textContent = "";
+
+    }, tipo === "exito" ? 4500 : 5500);
+
+}
+
+function ocultarMensajeModal(){
+
+    if (mensajeEstadoTimer) clearTimeout(mensajeEstadoTimer);
+
+    mensajeEstado.className = "mensaje-estado";
+
+    mensajeEstado.textContent = "";
+
+}
+
+function iniciarCargaEnvio(){
+
+    btnEnviar.disabled = true;
+
+    btnEnviar.dataset.textoOriginal = btnEnviar.innerHTML;
+
+    btnEnviar.innerHTML = '<span class="spinner-boton"></span>Enviando...';
+
+    overlayCarga.classList.add("visible");
+
+}
+
+function finalizarCargaEnvio(){
+
+    btnEnviar.disabled = false;
+
+    btnEnviar.innerHTML = btnEnviar.dataset.textoOriginal || "❤️ Reservar aporte";
+
+    overlayCarga.classList.remove("visible");
+
+}
+
+// ===============================
+// ABRIR MODAL DE UNA SILLA
+// ===============================
+
+function abrirModalSilla(chair){
+
+    sillaActual = chair;
+
+    const esSangha = chair.nombre === SILLA_SANGHA;
+
+    const recaudado = aportesPorSilla[chair.nombre] || 0;
+
+    const donantes = estadoDonaciones.filter(
+        d => d.silla === chair.nombre
+    );
+
+    let listaDonantes = "";
+
+    donantes.forEach(d => {
+
+        listaDonantes +=
+            `❤️ $${d.valor.toLocaleString("es-CO")}<br>`;
+
+    });
+
+    tituloModal.innerHTML = chair.nombre;
+
+    textoModal.innerHTML =
+`Meta: <strong>$${chair.meta.toLocaleString("es-CO")}</strong><br>
+Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong><br><br>
+
+<strong>Aportes recibidos</strong><br>
+
+${listaDonantes || "Aún no hay aportes para esta silla."}`;
+
+    const metaAlcanzada = recaudado >= chair.meta && !esSangha;
+
+    if (metaAlcanzada) {
+
+        camposAporte.style.display = "none";
+
+        pagoInfo.style.display = "none";
+
+        btnEnviar.style.display = "none";
+
+        textoModal.innerHTML +=
+        "<br><br>✅ ESTA SILLA ALCANZÓ SU META, PERO HAY MÁS!! Busca los puntos grises!";
+
+    } else {
+
+        camposAporte.style.display = "block";
+
+        pagoInfo.style.display = "flex";
+
+        btnEnviar.style.display = "block";
+
+    }
+
+    modal.style.display = "flex";
+
+}
+
+// ===============================
 // DIBUJAR SILLAS
 // ===============================
 
@@ -136,54 +258,9 @@ if (esSangha && !todasLasDemasSillasCompletas()) {
 
             }
 
-            sillaActual = chair;
+            ocultarMensajeModal();
 
-const recaudado = aportesPorSilla[chair.nombre] || 0;
-const donantes = estadoDonaciones.filter(
-    d => d.silla === chair.nombre
-);
-let listaDonantes = "";
-
-donantes.forEach(d => {
-
-    listaDonantes +=
-        `❤️ $${d.valor.toLocaleString("es-CO")}<br>`;
-
-});
-tituloModal.innerHTML = chair.nombre;
-
-textoModal.innerHTML =
-`Meta: <strong>$${chair.meta.toLocaleString("es-CO")}</strong><br>
-Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong><br><br>
-
-<strong>Aportes recibidos</strong><br>
-
-${listaDonantes || "Aún no hay aportes para esta silla."}`;
-
-const metaAlcanzada = recaudado >= chair.meta && !esSangha;
-
-if (metaAlcanzada) {
-
-    camposAporte.style.display = "none";
-
-    pagoInfo.style.display = "none";
-
-    btnEnviar.style.display = "none";
-
-    textoModal.innerHTML +=
-    "<br><br>✅ ESTA SILLA ALCANZÓ SU META, PERO HAY MÁS!! Busca los puntos grises!";
-
-} else {
-
-    camposAporte.style.display = "block";
-
-    pagoInfo.style.display = "flex";
-
-    btnEnviar.style.display = "block";
-
-}
-
-modal.style.display = "flex";
+            abrirModalSilla(chair);
 
         }
 
@@ -280,6 +357,8 @@ cerrarModal.onclick=()=>{
 
     modal.style.display="none";
 
+    ocultarMensajeModal();
+
 }
 
 window.onclick=(e)=>{
@@ -287,6 +366,8 @@ window.onclick=(e)=>{
     if(e.target===modal){
 
         modal.style.display="none";
+
+        ocultarMensajeModal();
 
     }
 
@@ -299,18 +380,18 @@ window.onclick=(e)=>{
 // ===============================
 
 btnEnviar.onclick = async () => {
-    console.log("Botón presionado");
 
-       const nombre = document.getElementById("nombre").value.trim();
+    const nombre = document.getElementById("nombre").value.trim();
 
     const valor = document.getElementById("valor").value;
 
     const mensaje = document.getElementById("mensaje").value.trim();
-const idTransaccion = document.getElementById("idTransaccion").value.trim();
-const email = document.getElementById("email").value.trim();
+    const idTransaccion = document.getElementById("idTransaccion").value.trim();
+    const email = document.getElementById("email").value.trim();
+
     if (nombre === "") {
 
-        alert("Por favor escribe tu nombre.");
+        mostrarMensajeModal("error", "Por favor escribe tu nombre.");
 
         return;
 
@@ -318,7 +399,7 @@ const email = document.getElementById("email").value.trim();
 
     if (valor === "" || Number(valor) <= 0) {
 
-        alert("Ingresa el valor de tu aporte.");
+        mostrarMensajeModal("error", "Ingresa el valor de tu aporte.");
 
         return;
 
@@ -326,7 +407,7 @@ const email = document.getElementById("email").value.trim();
 
     if (idTransaccion === "") {
 
-        alert("Ingresa el ID de la transacción del pago.");
+        mostrarMensajeModal("error", "Ingresa el ID de la transacción del pago.");
 
         return;
 
@@ -334,27 +415,13 @@ const email = document.getElementById("email").value.trim();
 
     if (email === "") {
 
-        alert("Ingresa tu correo electrónico.");
+        mostrarMensajeModal("error", "Ingresa tu correo electrónico.");
 
         return;
 
     }
 
-    const datos = {
-
-        silla: sillaActual.nombre,
-
-        nombre,
-
-        valor,
-
-        mensaje,
-
-        idTransaccion,
-
-        email
-
-    };
+    iniciarCargaEnvio();
 
     try {
 
@@ -364,49 +431,59 @@ const email = document.getElementById("email").value.trim();
 
                 method: "POST",
 
-body: new URLSearchParams({
-    silla: sillaActual.nombre,
-    nombre: nombre,
-    valor: valor,
-    mensaje: mensaje,
-    idTransaccion: idTransaccion,
-    email: email
-})
+                body: new URLSearchParams({
+                    silla: sillaActual.nombre,
+                    nombre: nombre,
+                    valor: valor,
+                    mensaje: mensaje,
+                    idTransaccion: idTransaccion,
+                    email: email
+                })
 
             }
 
         );
 
         const texto = await respuesta.text();
-console.log(texto);
-const resultado = JSON.parse(texto);
-
+        const resultado = JSON.parse(texto);
 
         if (resultado.ok) {
-
-            alert("🙏 ¡Muchas gracias! Tu aporte quedó registrado.");
 
             document.getElementById("nombre").value = "";
 
             document.getElementById("valor").value = "";
 
             document.getElementById("mensaje").value = "";
-await cargarEstado();
-            modal.style.display = "none";
+
+            document.getElementById("idTransaccion").value = "";
+
+            document.getElementById("email").value = "";
+
+            await cargarEstado();
+
+            abrirModalSilla(sillaActual);
+
+            mostrarMensajeModal("exito", "🙏 ¡Muchas gracias! Tu aporte quedó registrado.");
 
         } else {
 
-    alert(resultado.error);
+            await cargarEstado();
 
-    await cargarEstado();
+            abrirModalSilla(sillaActual);
 
-}
+            mostrarMensajeModal("error", resultado.error);
+
+        }
 
     } catch (error) {
 
-        alert("No fue posible conectar con el servidor.");
+        mostrarMensajeModal("error", "No fue posible conectar con el servidor.");
 
         console.error(error);
+
+    } finally {
+
+        finalizarCargaEnvio();
 
     }
 
@@ -427,7 +504,7 @@ lista.innerHTML = "";
 
 estadoDonaciones.forEach(d => {
 
-    if (d.mensaje && d.mensaje.trim() !== "") {
+    if (d.mensaje && String(d.mensaje).trim() !== "") {
 
         lista.innerHTML += `
             <div class="mensaje-donacion">
