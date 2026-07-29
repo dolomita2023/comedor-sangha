@@ -12,8 +12,8 @@ const chairs = [
     id:2,
     nombre:"Silla Naropa",
     meta:125000,
-    x:47.5,
-    y:26.4
+    x:42,
+    y:21
 },
 
 {
