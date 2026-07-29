@@ -18,6 +18,8 @@ const camposAporte = document.getElementById("camposAporte");
 
 const pagoInfo = document.getElementById("pagoInfo");
 
+const listaAportesModal = document.getElementById("listaAportesModal");
+
 const mensajeEstado = document.getElementById("mensajeEstado");
 
 const overlayCarga = document.getElementById("overlayCarga");
@@ -127,7 +129,11 @@ function ocultarMensajeModal(){
 
 }
 
+let envioEnCurso = false;
+
 function iniciarCargaEnvio(){
+
+    envioEnCurso = true;
 
     btnEnviar.disabled = true;
 
@@ -140,6 +146,8 @@ function iniciarCargaEnvio(){
 }
 
 function finalizarCargaEnvio(){
+
+    envioEnCurso = false;
 
     btnEnviar.disabled = false;
 
@@ -178,9 +186,10 @@ function abrirModalSilla(chair){
 
     textoModal.innerHTML =
 `Meta: <strong>$${chair.meta.toLocaleString("es-CO")}</strong><br>
-Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong><br><br>
+Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong>`;
 
-<strong>Aportes recibidos</strong><br>
+    listaAportesModal.innerHTML =
+`<strong>Aportes recibidos</strong><br>
 
 ${listaDonantes || "Aún no hay aportes para esta silla."}`;
 
@@ -286,7 +295,9 @@ if (esSangha && !todasLasDemasSillasCompletas()) {
 }
 
 dibujarSillas();
-cargarEstado();
+cargarEstado().finally(() => {
+    document.getElementById("contenedorComedor").classList.remove("cargando-inicial");
+});
 
 
 
@@ -355,6 +366,8 @@ y:${c.y}`
 
 cerrarModal.onclick=()=>{
 
+    if (envioEnCurso) return;
+
     modal.style.display="none";
 
     ocultarMensajeModal();
@@ -364,6 +377,8 @@ cerrarModal.onclick=()=>{
 window.onclick=(e)=>{
 
     if(e.target===modal){
+
+        if (envioEnCurso) return;
 
         modal.style.display="none";
 
@@ -527,7 +542,7 @@ estado.donaciones.forEach(d => {
 
     }
 
-    aportesPorSilla[d.silla] += d.valor;
+    aportesPorSilla[d.silla] += Number(d.valor) || 0;
 
 });
 dibujarSillas();

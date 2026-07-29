@@ -57,7 +57,7 @@
     💛 <strong>Haz clic</strong> en la silla que desees apoyar.<br>
     Y no te pierdas lo que hay al final de la página... ❤️
 </div>
-    <main class="contenedor-comedor">
+    <main id="contenedorComedor" class="contenedor-comedor cargando-inicial">
 
         <img
             src="assets/comedor.jpg"
@@ -65,6 +65,12 @@
             alt="Comedor">
 
         <div id="chairLayer"></div>
+
+        <div id="overlayCargaInicial" class="overlay-carga-inicial">
+
+            <div class="spinner-grande"></div>
+
+        </div>
 
     </main>
 
@@ -81,69 +87,79 @@
 
         <div class="modal-card">
 
-            <span id="cerrarModal" class="cerrar">&times;</span>
+            <div class="modal-cabecera">
 
-            <div id="mensajeEstado" class="mensaje-estado"></div>
+                <span id="cerrarModal" class="cerrar">&times;</span>
 
-            <h2 id="tituloModal">
+                <h2 id="tituloModal">
 
-            </h2>
-
-            <p id="textoModal">
-
-            </p>
-
-            <div id="pagoInfo" class="pago-info">
-
-                <img
-                    src="assets/qr-brebe-cowfundingmde.jpeg"
-                    alt="Código QR Bre-B para pagar a la llave @cowfundingmde"
-                    class="qr-pago">
-
-                <div class="datos-pago">
-
-                    <span class="llave-etiqueta">Llave Bre-B</span>
-
-                    <span class="llave-pago">@cowfundingmde</span>
-
-                    <p class="descripcion-pago">
-                        Escanea el QR o copia la llave en tu app bancaria (Bre-B)
-                        y transfiere gratis, al instante.
-                    </p>
-
-                </div>
+                </h2>
 
             </div>
 
-            <div id="camposAporte">
+            <div class="modal-cuerpo">
 
-                <input
-                    id="nombre"
-                    type="text"
-                    placeholder="Tu nombre *"
-                    required>
+                <div id="mensajeEstado" class="mensaje-estado"></div>
 
-                <input
-                    id="valor"
-                    type="number"
-                    placeholder="Valor del aporte (COP) *"
-                    required>
+                <p id="textoModal">
 
-                <textarea
-                    id="mensaje"
-                    placeholder="Mensaje para la Sangha (opcional)"></textarea>
+                </p>
 
-                <input
-                    id="idTransaccion"
-                    type="text"
-                    placeholder="ID de la transacción del pago *"
-                    required>
+                <div id="listaAportesModal" class="lista-aportes-modal"></div>
 
-                <input
-                    id="email"
-                    type="email"
-                    placeholder="Tu correo electrónico *"
-                    required>
+                <div id="pagoInfo" class="pago-info">
+
+                    <img
+                        src="assets/qr-brebe-cowfundingmde.jpeg"
+                        alt="Código QR Bre-B para pagar a la llave @cowfundingmde"
+                        class="qr-pago">
+
+                    <div class="datos-pago">
+
+                        <span class="llave-etiqueta">Llave Bre-B</span>
+
+                        <span class="llave-pago">@cowfundingmde</span>
+
+                        <p class="descripcion-pago">
+                            Escanea el QR o copia la llave en tu app bancaria (Bre-B)
+                            y transfiere gratis, al instante.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div id="camposAporte">
+
+                    <input
+                        id="nombre"
+                        type="text"
+                        placeholder="Tu nombre *"
+                        required>
+
+                    <input
+                        id="valor"
+                        type="number"
+                        placeholder="Valor del aporte (COP) *"
+                        required>
+
+                    <textarea
+                        id="mensaje"
+                        placeholder="Mensaje para la Sangha (opcional)"></textarea>
+
+                    <input
+                        id="idTransaccion"
+                        type="text"
+                        placeholder="ID de la transacción del pago *"
+                        required>
+
+                    <input
+                        id="email"
+                        type="email"
+                        placeholder="Tu correo electrónico *"
+                        required>
+
+                </div>
 
             </div>
 
