@@ -54,7 +54,7 @@
     </section>
 
 <div class="instrucciones">
-    💛 <strong>Haz doble clic</strong> en la silla que desees apoyar.<br>
+    💛 <strong>Haz clic</strong> en la silla que desees apoyar.<br>
     Y no te pierdas lo que hay al final de la página... ❤️
 </div>
     <main class="contenedor-comedor">
@@ -91,23 +91,59 @@
 
             </p>
 
-            <input
-                id="nombre"
-                type="text"
-                placeholder="Tu nombre">
+            <div class="pago-info">
 
-            <input
-                id="valor"
-                type="number"
-                placeholder="Valor del aporte (COP)">
+                <img
+                    src="assets/qr-brebe-cowfundingmde.jpeg"
+                    alt="Código QR Bre-B para pagar a la llave @cowfundingmde"
+                    class="qr-pago">
 
-            <textarea
-                id="mensaje"
-                placeholder="Mensaje para la Sangha (opcional)"></textarea>
+                <div class="datos-pago">
+
+                    <span class="llave-etiqueta">Llave Bre-B</span>
+
+                    <span class="llave-pago">@cowfundingmde</span>
+
+                    <p class="descripcion-pago">
+                        Escanea el QR o copia la llave en tu app bancaria (Bre-B)
+                        y transfiere gratis, al instante.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div id="camposAporte">
+
                 <input
-    id="email"
-    type="email"
-    placeholder="Tu correo electrónico">
+                    id="nombre"
+                    type="text"
+                    placeholder="Tu nombre *"
+                    required>
+
+                <input
+                    id="valor"
+                    type="number"
+                    placeholder="Valor del aporte (COP) *"
+                    required>
+
+                <textarea
+                    id="mensaje"
+                    placeholder="Mensaje para la Sangha (opcional)"></textarea>
+
+                <input
+                    id="idTransaccion"
+                    type="text"
+                    placeholder="ID de la transacción del pago *"
+                    required>
+
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="Tu correo electrónico *"
+                    required>
+
+            </div>
 
             <button id="btnEnviar">
 

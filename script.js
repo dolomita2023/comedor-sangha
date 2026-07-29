@@ -14,12 +14,78 @@ const textoModal = document.getElementById("textoModal");
 
 const btnEnviar = document.getElementById("btnEnviar");
 
+const camposAporte = document.getElementById("camposAporte");
+
 let sillaActual = null;
 
 let drag = null;
 
 let aportesPorSilla = {};
 let estadoDonaciones = [];
+
+const SILLA_SANGHA = "Silla Sangha";
+
+let sanghaTooltipEl = null;
+let sanghaTooltipTimer = null;
+
+// ===============================
+// SILLA SANGHA (excepción)
+// ===============================
+
+function todasLasDemasSillasCompletas(){
+
+    return chairs.every(c => {
+
+        if (c.nombre === SILLA_SANGHA) return true;
+
+        return (aportesPorSilla[c.nombre] || 0) >= c.meta;
+
+    });
+
+}
+
+function cerrarTooltipSangha(){
+
+    if (sanghaTooltipEl) {
+        sanghaTooltipEl.remove();
+        sanghaTooltipEl = null;
+    }
+
+    if (sanghaTooltipTimer) {
+        clearTimeout(sanghaTooltipTimer);
+        sanghaTooltipTimer = null;
+    }
+
+}
+
+function mostrarTooltipSangha(punto){
+
+    cerrarTooltipSangha();
+
+    const tip = document.createElement("div");
+
+    tip.className = "sangha-tooltip";
+
+    tip.innerHTML =
+        "🌸 La <strong>Silla Sangha</strong> se habilita cuando " +
+        "<strong>todas las demás sillas</strong> alcancen su meta.<br>" +
+        "¡Sigamos apoyando esas primero!";
+
+    punto.appendChild(tip);
+
+    sanghaTooltipEl = tip;
+
+    sanghaTooltipTimer = setTimeout(cerrarTooltipSangha, 4000);
+
+}
+
+document.addEventListener("click", (e) => {
+
+    if (sanghaTooltipEl && !e.target.closest(".chair")) {
+        cerrarTooltipSangha();
+    }
+
+});
 
 // ===============================
 // DIBUJAR SILLAS
@@ -36,9 +102,14 @@ function dibujarSillas(){
 
         punto.className="chair";
         const recaudado = aportesPorSilla[chair.nombre] || 0;
+        const esSangha = chair.nombre === SILLA_SANGHA;
 
-if (recaudado >= chair.meta) {
+if (recaudado >= chair.meta && !esSangha) {
     punto.classList.add("completa");
+}
+
+if (esSangha && !todasLasDemasSillasCompletas()) {
+    punto.classList.add("bloqueada");
 }
 
         punto.style.left=`calc(${chair.x}% - 17px)`;
@@ -49,9 +120,19 @@ if (recaudado >= chair.meta) {
 
 
 
-        // Abrir formulario con doble clic
+        // Abrir formulario con un solo clic
 
-        punto.ondblclick=()=>{
+        punto.onclick=()=>{
+
+            const esSangha = chair.nombre === SILLA_SANGHA;
+
+            if (esSangha && !todasLasDemasSillasCompletas()) {
+
+                mostrarTooltipSangha(punto);
+
+                return;
+
+            }
 
             sillaActual = chair;
 
@@ -77,14 +158,20 @@ Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong><br><br>
 
 ${listaDonantes || "Aún no hay aportes para esta silla."}`;
 
-if (recaudado >= chair.meta) {
+const metaAlcanzada = recaudado >= chair.meta && !esSangha;
+
+if (metaAlcanzada) {
+
+    camposAporte.style.display = "none";
 
     btnEnviar.style.display = "none";
 
     textoModal.innerHTML +=
-    "<br><br>✅ ESTA SILLA ALCANZÓ SU META, PERO HAY MÁS!! Busca los puntos grires!";
+    "<br><br>✅ ESTA SILLA ALCANZÓ SU META, PERO HAY MÁS!! Busca los puntos grises!";
 
 } else {
+
+    camposAporte.style.display = "block";
 
     btnEnviar.style.display = "block";
 
@@ -213,6 +300,7 @@ btnEnviar.onclick = async () => {
     const valor = document.getElementById("valor").value;
 
     const mensaje = document.getElementById("mensaje").value.trim();
+const idTransaccion = document.getElementById("idTransaccion").value.trim();
 const email = document.getElementById("email").value.trim();
     if (nombre === "") {
 
@@ -230,6 +318,22 @@ const email = document.getElementById("email").value.trim();
 
     }
 
+    if (idTransaccion === "") {
+
+        alert("Ingresa el ID de la transacción del pago.");
+
+        return;
+
+    }
+
+    if (email === "") {
+
+        alert("Ingresa tu correo electrónico.");
+
+        return;
+
+    }
+
     const datos = {
 
         silla: sillaActual.nombre,
@@ -238,7 +342,11 @@ const email = document.getElementById("email").value.trim();
 
         valor,
 
-        mensaje
+        mensaje,
+
+        idTransaccion,
+
+        email
 
     };
 
@@ -255,6 +363,7 @@ body: new URLSearchParams({
     nombre: nombre,
     valor: valor,
     mensaje: mensaje,
+    idTransaccion: idTransaccion,
     email: email
 })
 
