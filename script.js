@@ -35,6 +35,7 @@ let ultimoAporteIdTransaccion = null;
 let drag = null;
 
 let aportesPorSilla = {};
+let metasPorSilla = {};
 let estadoDonaciones = [];
 
 const SILLA_SANGHA = "Silla Sangha";
@@ -52,7 +53,7 @@ function todasLasDemasSillasCompletas(){
 
         if (c.nombre === SILLA_SANGHA) return true;
 
-        return (aportesPorSilla[c.nombre] || 0) >= c.meta;
+        return (aportesPorSilla[c.nombre] || 0) >= (metasPorSilla[c.nombre] || Infinity);
 
     });
 
@@ -201,6 +202,8 @@ function abrirModalSilla(chair){
 
     const esSangha = chair.nombre === SILLA_SANGHA;
 
+    const meta = metasPorSilla[chair.nombre] || 0;
+
     const recaudado = aportesPorSilla[chair.nombre] || 0;
 
     const donantes = estadoDonaciones.filter(
@@ -224,14 +227,14 @@ function abrirModalSilla(chair){
     tituloModal.innerHTML = chair.nombre;
 
     textoModal.innerHTML =
-`Meta: <strong>$${chair.meta.toLocaleString("es-CO")}</strong><br>
+`Meta: <strong>$${meta.toLocaleString("es-CO")}</strong><br>
 Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong>`;
 
     listaAportesModal.innerHTML = listaDonantes
         ? `<strong>Aportes recibidos</strong><div class="grid-donaciones">${listaDonantes}</div>`
         : `<strong>Aportes recibidos</strong><p class="sin-aportes">Aún no hay aportes para esta silla.</p>`;
 
-    const metaAlcanzada = recaudado >= chair.meta && !esSangha;
+    const metaAlcanzada = recaudado >= meta && !esSangha;
 
     if (metaAlcanzada) {
 
@@ -273,9 +276,10 @@ function dibujarSillas(){
 
         punto.className="chair";
         const recaudado = aportesPorSilla[chair.nombre] || 0;
+        const meta = metasPorSilla[chair.nombre] || 0;
         const esSangha = chair.nombre === SILLA_SANGHA;
 
-if (recaudado >= chair.meta && !esSangha) {
+if (recaudado >= meta && !esSangha) {
     punto.classList.add("completa");
 }
 
@@ -502,7 +506,11 @@ btnEnviar.onclick = async () => {
 
             document.getElementById("email").value = "";
 
-            await cargarEstado();
+            if (resultado.donaciones) {
+                aplicarEstado(resultado);
+            } else {
+                await cargarEstado();
+            }
 
             abrirModalSilla(sillaActual);
 
@@ -518,7 +526,11 @@ btnEnviar.onclick = async () => {
 
         } else {
 
-            await cargarEstado();
+            if (resultado.donaciones) {
+                aplicarEstado(resultado);
+            } else {
+                await cargarEstado();
+            }
 
             abrirModalSilla(sillaActual);
 
@@ -539,6 +551,59 @@ btnEnviar.onclick = async () => {
     }
 
 };
+function aplicarEstado(estado){
+
+    metasPorSilla = estado.metas || {};
+
+    estadoDonaciones = estado.donaciones;
+    const lista = document.getElementById("listaDonantes");
+
+    lista.innerHTML = "";
+
+    estadoDonaciones.forEach(d => {
+
+        if (d.mensaje && String(d.mensaje).trim() !== "") {
+
+            lista.innerHTML += `
+                <div class="mensaje-donacion">
+                    ❤️ <strong>${d.nombre}</strong><br>
+                    ${d.mensaje}
+                </div>
+            `;
+
+        }
+
+    });
+
+    aportesPorSilla = {};
+
+    estado.donaciones.forEach(d => {
+
+        if (!aportesPorSilla[d.silla]) {
+
+            aportesPorSilla[d.silla] = 0;
+
+        }
+
+        aportesPorSilla[d.silla] += Number(d.valor) || 0;
+
+    });
+
+    dibujarSillas();
+
+    document.getElementById("dineroTotal").innerHTML =
+        "$" + estado.recaudado.toLocaleString("es-CO");
+
+    const porcentaje = estado.recaudado / estado.meta * 100;
+
+    document.getElementById("barraProgreso").style.width =
+        porcentaje + "%";
+
+    document.getElementById("porcentajeGeneral").innerHTML =
+        porcentaje.toFixed(1) + "% de $" + estado.meta.toLocaleString("es-CO");
+
+}
+
 async function cargarEstado() {
 
     try {
@@ -548,52 +613,8 @@ async function cargarEstado() {
         );
 
         const estado = await respuesta.json();
-        estadoDonaciones = estado.donaciones;
-        const lista = document.getElementById("listaDonantes");
 
-lista.innerHTML = "";
-
-estadoDonaciones.forEach(d => {
-
-    if (d.mensaje && String(d.mensaje).trim() !== "") {
-
-        lista.innerHTML += `
-            <div class="mensaje-donacion">
-                ❤️ <strong>${d.nombre}</strong><br>
-                ${d.mensaje}
-            </div>
-        `;
-
-    }
-
-});
-console.log(estado.donaciones);
-aportesPorSilla = {};
-
-estado.donaciones.forEach(d => {
-
-    if (!aportesPorSilla[d.silla]) {
-
-        aportesPorSilla[d.silla] = 0;
-
-    }
-
-    aportesPorSilla[d.silla] += Number(d.valor) || 0;
-
-});
-dibujarSillas();
-
-console.log(aportesPorSilla);
-        document.getElementById("dineroTotal").innerHTML =
-            "$" + estado.recaudado.toLocaleString("es-CO");
-
-        const porcentaje = estado.recaudado / estado.meta * 100;
-
-        document.getElementById("barraProgreso").style.width =
-            porcentaje + "%";
-
-        document.getElementById("porcentajeGeneral").innerHTML =
-            porcentaje.toFixed(1) + "% de $" + estado.meta.toLocaleString("es-CO");
+        aplicarEstado(estado);
 
     } catch (error) {
 
