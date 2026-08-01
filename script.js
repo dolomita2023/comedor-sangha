@@ -112,35 +112,29 @@ function mostrarMensajeModal(tipo, texto){
 
     mensajeEstado.className = "mensaje-estado " + tipo;
 
+    mensajeEstado.innerHTML = "";
+
+    const textoEl = document.createElement("span");
+    textoEl.textContent = texto;
+
+    const btnOk = document.createElement("button");
+    btnOk.type = "button";
+    btnOk.className = "btn-ok-mensaje";
+
     if (tipo === "exito") {
 
-        mensajeEstado.innerHTML = "";
-
-        const textoEl = document.createElement("span");
-        textoEl.textContent = texto;
-
-        const btnOk = document.createElement("button");
-        btnOk.type = "button";
-        btnOk.className = "btn-ok-mensaje";
         btnOk.textContent = "OK";
         btnOk.onclick = cerrarModalCompleto;
 
-        mensajeEstado.appendChild(textoEl);
-        mensajeEstado.appendChild(btnOk);
-
     } else {
 
-        mensajeEstado.textContent = texto;
-
-        mensajeEstadoTimer = setTimeout(() => {
-
-            mensajeEstado.className = "mensaje-estado";
-
-            mensajeEstado.textContent = "";
-
-        }, 5500);
+        btnOk.textContent = "Cerrar";
+        btnOk.onclick = ocultarMensajeModal;
 
     }
+
+    mensajeEstado.appendChild(textoEl);
+    mensajeEstado.appendChild(btnOk);
 
 }
 
@@ -219,8 +213,14 @@ function abrirModalSilla(chair){
 
         const clase = "item-donacion" + (esPropio ? " aporte-propio" : "");
 
+        const tieneMensajePropio = esPropio && d.mensaje && String(d.mensaje).trim() !== "";
+
+        const mensajePropioHtml = tieneMensajePropio
+            ? `<br><span class="mensaje-propio">"${String(d.mensaje).trim()}"</span>`
+            : "";
+
         listaDonantes +=
-            `<span class="${clase}">❤️ $${d.valor.toLocaleString("es-CO")}${esPropio ? " · ¡Tu aporte!" : ""}</span>`;
+            `<span class="${clase}">❤️ $${d.valor.toLocaleString("es-CO")}${esPropio ? " · ¡Tu aporte!" : ""}${mensajePropioHtml}</span>`;
 
     });
 

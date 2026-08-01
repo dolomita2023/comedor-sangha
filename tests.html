@@ -353,6 +353,35 @@
                 btnEnviar.disabled === false
             );
 
+            assert(
+                "El mensaje de error tiene botón 'Cerrar' y no se autoborra",
+                !!document.querySelector(".btn-ok-mensaje") && mensajeEstado.textContent.includes("Cerrar")
+            );
+
+            document.querySelector(".btn-ok-mensaje").click();
+            assert(
+                "'Cerrar' en un error solo oculta el mensaje, el modal sigue abierto",
+                mensajeEstado.className === "mensaje-estado" && modal.style.display === "flex"
+            );
+
+            cerrarModalCompleto();
+
+            // ---- 8. El aporte propio muestra su mensaje, si dejó uno ----
+            ultimoAporteIdTransaccion = "MSG-1";
+            estadoDonaciones = [
+                { silla:"Silla Naropa", nombre:"Ana", valor:5000, idTransaccion:"MSG-1", mensaje:"Con cariño para la Sangha", email:"a@a.com" }
+            ];
+            aportesPorSilla["Silla Naropa"] = 5000;
+
+            const naropaConMensaje = chairPorNombre("Silla Naropa");
+            naropaConMensaje.click();
+
+            const propioConMensaje = document.querySelector(".item-donacion.aporte-propio");
+            assert(
+                "El aporte propio muestra su mensaje cuando dejó uno",
+                propioConMensaje !== null && propioConMensaje.innerHTML.includes("Con cariño para la Sangha")
+            );
+
             cerrarModalCompleto();
 
             // ---- Render de resultados ----

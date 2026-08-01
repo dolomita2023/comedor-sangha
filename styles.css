@@ -433,6 +433,14 @@ h1{
     color:#8a6d2f;
 }
 
+.mensaje-propio{
+    display:inline-block;
+    margin-top:4px;
+    font-weight:400;
+    font-style:italic;
+    color:#6b4e16;
+}
+
 .sin-aportes{
     margin-top:6px;
     color:#777;
@@ -450,22 +458,33 @@ h1{
     text-align:center;
 }
 
-.mensaje-estado.exito{
+.mensaje-estado.exito,
+.mensaje-estado.error{
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:12px;
     text-align:left;
+}
+
+.mensaje-estado.exito{
     background:#e7f7ec;
     color:#1f7a41;
     border:1px solid #b7e4c7;
 }
 
 .mensaje-estado.error{
-    display:block;
     background:#fdeceb;
     color:#a3312a;
     border:1px solid #f3b8b3;
+}
+
+.mensaje-estado.error .btn-ok-mensaje{
+    background:#a3312a;
+}
+
+.mensaje-estado.error .btn-ok-mensaje:hover{
+    background:#812319;
 }
 
 .btn-ok-mensaje{
