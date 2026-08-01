@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <title>Pruebas — Comedor Sangha</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        #resultadosPruebas{
+            max-width:700px;
+            margin:20px auto;
+            font-family:monospace;
+            font-size:14px;
+            background:white;
+            padding:20px;
+            border-radius:10px;
+        }
+        .prueba-ok{ color:#1f7a41; }
+        .prueba-fail{ color:#a3312a; font-weight:bold; }
+        #resumenPruebas{
+            font-size:18px;
+            font-weight:bold;
+            margin-bottom:12px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="overlayCargaPagina" class="overlay-carga-pagina visible">
+        <div class="spinner-grande"></div>
+    </div>
+
+    <header>
+        <h1>🧪 Pruebas — Comedor Sangha</h1>
+    </header>
+
+    <section class="resumen">
+        <h2>Recaudado hasta ahora</h2>
+        <div id="dineroTotal" class="dinero">$0</div>
+        <div class="barra"><div id="barraProgreso" class="barra-interna"></div></div>
+        <div id="porcentajeGeneral">0% de $1.850.000</div>
+    </section>
+
+    <main id="contenedorComedor" class="contenedor-comedor">
+        <img src="assets/comedor.jpg" class="foto-comedor" alt="Comedor">
+        <div id="chairLayer"></div>
+    </main>
+
+    <div id="modal" class="modal">
+        <div class="modal-card">
+            <div class="modal-cabecera">
+                <span id="cerrarModal" class="cerrar">&times;</span>
+                <h2 id="tituloModal"></h2>
+            </div>
+            <div id="modalCuerpo" class="modal-cuerpo">
+                <div id="mensajeEstado" class="mensaje-estado"></div>
+                <p id="textoModal"></p>
+                <div id="listaAportesModal" class="lista-aportes-modal"></div>
+                <div id="pagoInfo" class="pago-info">
+                    <img src="assets/qr-brebe-cowfundingmde.jpeg" alt="QR" class="qr-pago">
+                    <div class="datos-pago">
+                        <span class="llave-etiqueta">Llave Bre-B</span>
+                        <span class="llave-pago">@cowfundingmde</span>
+                        <p class="descripcion-pago">Escanea el QR o copia la llave.</p>
+                    </div>
+                </div>
+                <div id="camposAporte">
+                    <input id="nombre" type="text" placeholder="Tu nombre *" required>
+                    <input id="valor" type="number" placeholder="Valor del aporte (COP) *" required>
+                    <textarea id="mensaje" placeholder="Mensaje (opcional)"></textarea>
+                    <input id="idTransaccion" type="text" placeholder="ID de la transacción *" required>
+                    <input id="email" type="email" placeholder="Tu correo *" required>
+                </div>
+            </div>
+            <button id="btnEnviar">❤️ Reservar aporte</button>
+            <div id="overlayCarga" class="overlay-carga"><div class="spinner-grande"></div></div>
+        </div>
+    </div>
+
+    <section class="generosidad">
+        <h2>❤️ Generosidad Compartida</h2>
+        <div id="listaDonantes">Aún no hay aportes registrados.</div>
+    </section>
+
+    <div id="resultadosPruebas">Cargando pruebas...</div>
+
+    <script>
+        // ===============================
+        // MOCK DE fetch — evita llamadas reales a Apps Script.
+        // Las pruebas configuran window.__mockPost antes de simular un envío.
+        // ===============================
+
+        window.__mockEstadoInicial = {
+            recaudado: 250000,
+            meta: 1850000,
+            metas: {
+                "Silla Tilopa": 125000,
+                "Silla Naropa": 125000,
+                "Silla Saraha": 125000,
+                "Silla Nagarjuna": 125000,
+                "Silla Virupa": 125000,
+                "Silla Kanhapa": 125000,
+                "Silla Kukuripa": 125000,
+                "Silla Lakshminkara": 125000,
+                "Silla Sukhasiddhi": 125000,
+                "Silla Niguma": 125000,
+                "Silla Sangha": 600000
+            },
+            donaciones: [
+                { silla:"Silla Tilopa", nombre:"Donante Uno", valor:125000, idTransaccion:"AAA1", mensaje:"Mensaje de prueba", email:"uno@test.com" },
+                { silla:"Silla Naropa", nombre:"Donante Dos", valor:125000, idTransaccion:12345, mensaje:1, email:"dos@test.com" }
+            ]
+        };
+
+        window.__mockPost = null; // las pruebas lo asignan antes de simular btnEnviar.click()
+
+        window.__llamadasFetch = [];
+
+        window.fetch = function(url, opciones){
+            window.__llamadasFetch.push({ url, opciones });
+
+            const esPost = opciones && opciones.method === "POST";
+
+            if (!esPost) {
+                return Promise.resolve({
+                    json: () => Promise.resolve(window.__mockEstadoInicial),
+                    text: () => Promise.resolve(JSON.stringify(window.__mockEstadoInicial))
+                });
+            }
+
+            const respuesta = window.__mockPost || { ok: true, mensaje: "Reserva registrada correctamente" };
+
+            // Demora artificial para poder probar el estado "enviando..." de forma confiable
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    resolve({
+                        text: () => Promise.resolve(JSON.stringify(respuesta))
+                    });
+                }, 200);
+            });
+        };
+    </script>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+
+    <script>
+        // ===============================
+        // ARNÉS DE PRUEBAS (sin dependencias externas)
+        // ===============================
+
+        const resultados = [];
+
+        function assert(nombre, condicion, detalle){
+            resultados.push({ nombre, ok: !!condicion, detalle: detalle || "" });
+        }
+
+        function chairPorNombre(nombre){
+            return Array.from(document.querySelectorAll(".chair"))
+                .find(c => c.querySelector("span").textContent === nombre);
+        }
+
+        function llenarCampos(datos){
+            document.getElementById("nombre").value = datos.nombre || "";
+            document.getElementById("valor").value = datos.valor || "";
+            document.getElementById("mensaje").value = datos.mensaje || "";
+            document.getElementById("idTransaccion").value = datos.idTransaccion || "";
+            document.getElementById("email").value = datos.email || "";
+        }
+
+        function esperar(ms){
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        async function correrPruebas(){
+
+            // Esperamos a que cargue el estado inicial (mock, instantáneo pero async)
+            await esperar(300);
+
+            // ---- 1. aplicarEstado pobló correctamente los mapas ----
+            assert(
+                "aplicarEstado calcula metasPorSilla desde la API",
+                metasPorSilla["Silla Tilopa"] === 125000 && metasPorSilla["Silla Sangha"] === 600000,
+                JSON.stringify(metasPorSilla)
+            );
+
+            assert(
+                "aplicarEstado calcula aportesPorSilla sumando donaciones",
+                aportesPorSilla["Silla Tilopa"] === 125000 && aportesPorSilla["Silla Naropa"] === 125000,
+                JSON.stringify(aportesPorSilla)
+            );
+
+            assert(
+                "aplicarEstado tolera mensaje numérico sin romper (bug histórico)",
+                document.getElementById("dineroTotal").textContent.includes("250.000"),
+                document.getElementById("dineroTotal").textContent
+            );
+
+            // ---- 2. Silla completa oculta form/QR/botón ----
+            const tilopa = chairPorNombre("Silla Tilopa");
+            assert("Silla Tilopa (recaudado=meta) se marca 'completa'", tilopa.classList.contains("completa"));
+
+            tilopa.click();
+            assert("Al abrir silla completa, se oculta camposAporte", camposAporte.style.display === "none");
+            assert("Al abrir silla completa, se oculta pagoInfo", pagoInfo.style.display === "none");
+            assert("Al abrir silla completa, se oculta btnEnviar", btnEnviar.style.display === "none");
+            cerrarModalCompleto();
+
+            // ---- 3. Silla Sangha bloqueada mientras no todas las demás estén completas ----
+            assert(
+                "todasLasDemasSillasCompletas() es false si falta alguna",
+                todasLasDemasSillasCompletas() === false
+            );
+
+            const sangha = chairPorNombre("Silla Sangha");
+            assert("Silla Sangha tiene clase 'bloqueada'", sangha.classList.contains("bloqueada"));
+
+            sangha.click();
+            assert(
+                "Clic en Sangha bloqueada muestra tooltip, no abre modal",
+                document.querySelector(".sangha-tooltip") !== null && modal.style.display !== "flex"
+            );
+            cerrarTooltipSangha();
+
+            // ---- 4. Silla Sangha desbloqueada nunca oculta el formulario, sin límite ----
+            chairs.forEach(c => {
+                if (c.nombre !== "Silla Sangha") aportesPorSilla[c.nombre] = metasPorSilla[c.nombre];
+            });
+            aportesPorSilla["Silla Sangha"] = 5000000; // muy por encima de su meta
+            dibujarSillas();
+
+            assert(
+                "Con todas las demás completas, Sangha ya no está bloqueada",
+                todasLasDemasSillasCompletas() === true
+            );
+
+            const sanghaDesbloqueada = chairPorNombre("Silla Sangha");
+            sanghaDesbloqueada.click();
+            assert(
+                "Sangha desbloqueada y sobre-meta sigue mostrando el formulario",
+                camposAporte.style.display === "block" && btnEnviar.style.display === "block"
+            );
+            cerrarModalCompleto();
+
+            // ---- 5. Validaciones del formulario (sin llamar a fetch) ----
+            const llamadasAntes = window.__llamadasFetch.length;
+
+            const saraha = chairPorNombre("Silla Saraha");
+            saraha.click();
+
+            llenarCampos({ nombre:"", valor:"1000", idTransaccion:"X", email:"a@a.com" });
+            btnEnviar.click();
+            assert(
+                "Nombre vacío bloquea el envío y muestra error",
+                mensajeEstado.className.includes("error") && mensajeEstado.textContent.includes("nombre")
+            );
+
+            llenarCampos({ nombre:"Ana", valor:"0", idTransaccion:"X", email:"a@a.com" });
+            btnEnviar.click();
+            assert(
+                "Valor en cero bloquea el envío",
+                mensajeEstado.className.includes("error") && mensajeEstado.textContent.includes("valor")
+            );
+
+            llenarCampos({ nombre:"Ana", valor:"1000", idTransaccion:"", email:"a@a.com" });
+            btnEnviar.click();
+            assert(
+                "ID de transacción vacío bloquea el envío",
+                mensajeEstado.className.includes("error") && mensajeEstado.textContent.includes("transacción")
+            );
+
+            llenarCampos({ nombre:"Ana", valor:"1000", idTransaccion:"X", email:"" });
+            btnEnviar.click();
+            assert(
+                "Correo vacío bloquea el envío",
+                mensajeEstado.className.includes("error") && mensajeEstado.textContent.includes("correo")
+            );
+
+            assert(
+                "Ninguna validación fallida llegó a golpear la red",
+                window.__llamadasFetch.length === llamadasAntes
+            );
+
+            // ---- 6. Envío exitoso: oculta form/QR/botón, sube el scroll, resalta el aporte propio ----
+            window.__mockPost = Object.assign({
+                ok: true,
+                mensaje: "Reserva registrada correctamente"
+            }, window.__mockEstadoInicial, {
+                recaudado: 251000,
+                donaciones: window.__mockEstadoInicial.donaciones.concat([{
+                    silla: "Silla Saraha",
+                    nombre: "Ana",
+                    valor: 1000,
+                    idTransaccion: "99999999", // simula lo que Sheets guardaría como texto
+                    mensaje: "",
+                    email: "a@a.com"
+                }])
+            });
+
+            llenarCampos({ nombre:"Ana", valor:"1000", idTransaccion:"99999999", email:"a@a.com" });
+            btnEnviar.click();
+
+            await esperar(50);
+            assert("Mientras envía, el botón queda deshabilitado", btnEnviar.disabled === true);
+
+            // Intento de cierre durante el envío: no debe cerrar
+            cerrarModalCompleto();
+            assert("El modal no se cierra mientras envioEnCurso=true", modal.style.display === "flex");
+
+            await esperar(400);
+
+            assert("Tras éxito, se oculta camposAporte", camposAporte.style.display === "none");
+            assert("Tras éxito, se oculta pagoInfo", pagoInfo.style.display === "none");
+            assert("Tras éxito, se oculta btnEnviar", btnEnviar.style.display === "none");
+            assert("Tras éxito, el botón vuelve a habilitarse", btnEnviar.disabled === false);
+            assert("Tras éxito, aparece el mensaje con clase 'exito'", mensajeEstado.className.includes("exito"));
+            assert("El mensaje de éxito no se autoborra (tiene botón OK)", !!document.querySelector(".btn-ok-mensaje"));
+
+            const propio = document.querySelector(".item-donacion.aporte-propio");
+            assert(
+                "El aporte recién hecho se resalta aunque idTransaccion venga como distinto tipo",
+                propio !== null && propio.textContent.includes("¡Tu aporte!")
+            );
+
+            // El OK debe cerrar el modal completo
+            document.querySelector(".btn-ok-mensaje").click();
+            assert("El botón OK del mensaje de éxito cierra el modal", modal.style.display === "none");
+
+            // ---- 7. Respuesta de error del backend también refresca el estado ----
+            const virupa = chairPorNombre("Silla Virupa");
+            virupa.click();
+
+            window.__mockPost = Object.assign({
+                ok: false,
+                error: "Esta silla ya fue completada por otro amigo. ❤️"
+            }, window.__mockEstadoInicial);
+
+            llenarCampos({ nombre:"Ana", valor:"1000", idTransaccion:"Y1", email:"a@a.com" });
+            btnEnviar.click();
+            await esperar(300);
+
+            assert(
+                "Error del backend muestra el mensaje de error (no de éxito)",
+                mensajeEstado.className.includes("error")
+            );
+            assert(
+                "Tras un error, el botón se reactiva",
+                btnEnviar.disabled === false
+            );
+
+            cerrarModalCompleto();
+
+            // ---- Render de resultados ----
+            renderResultados();
+
+        }
+
+        function renderResultados(){
+
+            const total = resultados.length;
+            const fallidas = resultados.filter(r => !r.ok);
+            const contenedor = document.getElementById("resultadosPruebas");
+
+            let html = `<div id="resumenPruebas">${fallidas.length === 0 ? "✅" : "❌"} ${total - fallidas.length}/${total} pruebas pasaron</div>`;
+
+            resultados.forEach(r => {
+                html += `<div class="${r.ok ? 'prueba-ok' : 'prueba-fail'}">${r.ok ? "✔" : "✘"} ${r.nombre}${r.ok ? "" : " — " + r.detalle}</div>`;
+            });
+
+            contenedor.innerHTML = html;
+
+            console.log(`${total - fallidas.length}/${total} pruebas OK`);
+            if (fallidas.length) console.error("Pruebas fallidas:", fallidas);
+
+        }
+
+        correrPruebas();
+    </script>
+
+</body>
+
+</html>
