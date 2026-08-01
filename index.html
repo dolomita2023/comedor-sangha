@@ -14,6 +14,12 @@
 
 <body>
 
+    <div id="overlayCargaPagina" class="overlay-carga-pagina visible">
+
+        <div class="spinner-grande"></div>
+
+    </div>
+
     <header>
 
         <h1>🍃 Construyamos juntos nuestro comedor</h1>
@@ -54,10 +60,10 @@
     </section>
 
 <div class="instrucciones">
-    💛 <strong>Haz doble clic</strong> en la silla que desees apoyar.<br>
+    💛 <strong>Haz clic</strong> en la silla que desees apoyar.<br>
     Y no te pierdas lo que hay al final de la página... ❤️
 </div>
-    <main class="contenedor-comedor">
+    <main id="contenedorComedor" class="contenedor-comedor">
 
         <img
             src="assets/comedor.jpg"
@@ -81,39 +87,93 @@
 
         <div class="modal-card">
 
-            <span id="cerrarModal" class="cerrar">&times;</span>
+            <div class="modal-cabecera">
 
-            <h2 id="tituloModal">
+                <span id="cerrarModal" class="cerrar">&times;</span>
 
-            </h2>
+                <h2 id="tituloModal">
 
-            <p id="textoModal">
+                </h2>
 
-            </p>
+            </div>
 
-            <input
-                id="nombre"
-                type="text"
-                placeholder="Tu nombre">
+            <div id="modalCuerpo" class="modal-cuerpo">
 
-            <input
-                id="valor"
-                type="number"
-                placeholder="Valor del aporte (COP)">
+                <div id="mensajeEstado" class="mensaje-estado"></div>
 
-            <textarea
-                id="mensaje"
-                placeholder="Mensaje para la Sangha (opcional)"></textarea>
-                <input
-    id="email"
-    type="email"
-    placeholder="Tu correo electrónico">
+                <p id="textoModal">
+
+                </p>
+
+                <div id="listaAportesModal" class="lista-aportes-modal"></div>
+
+                <div id="pagoInfo" class="pago-info">
+
+                    <img
+                        src="assets/qr-brebe-cowfundingmde.jpeg"
+                        alt="Código QR Bre-B para pagar a la llave @cowfundingmde"
+                        class="qr-pago">
+
+                    <div class="datos-pago">
+
+                        <span class="llave-etiqueta">Llave Bre-B</span>
+
+                        <span class="llave-pago">@cowfundingmde</span>
+
+                        <p class="descripcion-pago">
+                            Escanea el QR o copia la llave en tu app bancaria (Bre-B)
+                            y transfiere gratis, al instante.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div id="camposAporte">
+
+                    <input
+                        id="nombre"
+                        type="text"
+                        placeholder="Tu nombre *"
+                        required>
+
+                    <input
+                        id="valor"
+                        type="number"
+                        placeholder="Valor del aporte (COP) *"
+                        required>
+
+                    <textarea
+                        id="mensaje"
+                        placeholder="Mensaje para la Sangha (opcional)"></textarea>
+
+                    <input
+                        id="idTransaccion"
+                        type="text"
+                        placeholder="ID de la transacción del pago *"
+                        required>
+
+                    <input
+                        id="email"
+                        type="email"
+                        placeholder="Tu correo electrónico *"
+                        required>
+
+                </div>
+
+            </div>
 
             <button id="btnEnviar">
 
                 ❤️ Reservar aporte
 
             </button>
+
+            <div id="overlayCarga" class="overlay-carga">
+
+                <div class="spinner-grande"></div>
+
+            </div>
 
         </div>
 

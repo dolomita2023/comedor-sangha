@@ -14,12 +14,252 @@ const textoModal = document.getElementById("textoModal");
 
 const btnEnviar = document.getElementById("btnEnviar");
 
+const camposAporte = document.getElementById("camposAporte");
+
+const pagoInfo = document.getElementById("pagoInfo");
+
+const listaAportesModal = document.getElementById("listaAportesModal");
+
+const modalCuerpo = document.getElementById("modalCuerpo");
+
+const mensajeEstado = document.getElementById("mensajeEstado");
+
+const overlayCarga = document.getElementById("overlayCarga");
+
+let mensajeEstadoTimer = null;
+
 let sillaActual = null;
+
+let ultimoAporteIdTransaccion = null;
 
 let drag = null;
 
 let aportesPorSilla = {};
+let metasPorSilla = {};
 let estadoDonaciones = [];
+
+const SILLA_SANGHA = "Silla Sangha";
+
+let sanghaTooltipEl = null;
+let sanghaTooltipTimer = null;
+
+// ===============================
+// SILLA SANGHA (excepción)
+// ===============================
+
+function todasLasDemasSillasCompletas(){
+
+    return chairs.every(c => {
+
+        if (c.nombre === SILLA_SANGHA) return true;
+
+        return (aportesPorSilla[c.nombre] || 0) >= (metasPorSilla[c.nombre] || Infinity);
+
+    });
+
+}
+
+function cerrarTooltipSangha(){
+
+    if (sanghaTooltipEl) {
+        sanghaTooltipEl.remove();
+        sanghaTooltipEl = null;
+    }
+
+    if (sanghaTooltipTimer) {
+        clearTimeout(sanghaTooltipTimer);
+        sanghaTooltipTimer = null;
+    }
+
+}
+
+function mostrarTooltipSangha(punto){
+
+    cerrarTooltipSangha();
+
+    const tip = document.createElement("div");
+
+    tip.className = "sangha-tooltip";
+
+    tip.innerHTML =
+        "🌸 La <strong>Silla Sangha</strong> se habilita cuando " +
+        "<strong>todas las demás sillas</strong> alcancen su meta.<br>" +
+        "¡Sigamos apoyando esas primero!";
+
+    punto.appendChild(tip);
+
+    sanghaTooltipEl = tip;
+
+    sanghaTooltipTimer = setTimeout(cerrarTooltipSangha, 4000);
+
+}
+
+document.addEventListener("click", (e) => {
+
+    if (sanghaTooltipEl && !e.target.closest(".chair")) {
+        cerrarTooltipSangha();
+    }
+
+});
+
+// ===============================
+// MENSAJES Y ESTADO DE CARGA DEL MODAL
+// ===============================
+
+function mostrarMensajeModal(tipo, texto){
+
+    if (mensajeEstadoTimer) clearTimeout(mensajeEstadoTimer);
+
+    mensajeEstado.className = "mensaje-estado " + tipo;
+
+    mensajeEstado.innerHTML = "";
+
+    const textoEl = document.createElement("span");
+    textoEl.textContent = texto;
+
+    const btnOk = document.createElement("button");
+    btnOk.type = "button";
+    btnOk.className = "btn-ok-mensaje";
+
+    if (tipo === "exito") {
+
+        btnOk.textContent = "OK";
+        btnOk.onclick = cerrarModalCompleto;
+
+    } else {
+
+        btnOk.textContent = "Cerrar";
+        btnOk.onclick = ocultarMensajeModal;
+
+    }
+
+    mensajeEstado.appendChild(textoEl);
+    mensajeEstado.appendChild(btnOk);
+
+}
+
+function ocultarMensajeModal(){
+
+    if (mensajeEstadoTimer) clearTimeout(mensajeEstadoTimer);
+
+    mensajeEstado.className = "mensaje-estado";
+
+    mensajeEstado.innerHTML = "";
+
+}
+
+function cerrarModalCompleto(){
+
+    if (envioEnCurso) return;
+
+    modal.style.display = "none";
+
+    ocultarMensajeModal();
+
+}
+
+let envioEnCurso = false;
+
+function iniciarCargaEnvio(){
+
+    envioEnCurso = true;
+
+    btnEnviar.disabled = true;
+
+    btnEnviar.dataset.textoOriginal = btnEnviar.innerHTML;
+
+    btnEnviar.innerHTML = '<span class="spinner-boton"></span>Enviando...';
+
+    overlayCarga.classList.add("visible");
+
+}
+
+function finalizarCargaEnvio(){
+
+    envioEnCurso = false;
+
+    btnEnviar.disabled = false;
+
+    btnEnviar.innerHTML = btnEnviar.dataset.textoOriginal || "❤️ Reservar aporte";
+
+    overlayCarga.classList.remove("visible");
+
+}
+
+// ===============================
+// ABRIR MODAL DE UNA SILLA
+// ===============================
+
+function abrirModalSilla(chair){
+
+    sillaActual = chair;
+
+    const esSangha = chair.nombre === SILLA_SANGHA;
+
+    const meta = metasPorSilla[chair.nombre] || 0;
+
+    const recaudado = aportesPorSilla[chair.nombre] || 0;
+
+    const donantes = estadoDonaciones.filter(
+        d => d.silla === chair.nombre
+    );
+
+    let listaDonantes = "";
+
+    donantes.forEach(d => {
+
+        const esPropio = ultimoAporteIdTransaccion
+            && String(d.idTransaccion) === String(ultimoAporteIdTransaccion);
+
+        const clase = "item-donacion" + (esPropio ? " aporte-propio" : "");
+
+        const tieneMensajePropio = esPropio && d.mensaje && String(d.mensaje).trim() !== "";
+
+        const mensajePropioHtml = tieneMensajePropio
+            ? `<br><span class="mensaje-propio">"${String(d.mensaje).trim()}"</span>`
+            : "";
+
+        listaDonantes +=
+            `<span class="${clase}">❤️ $${d.valor.toLocaleString("es-CO")}${esPropio ? " · ¡Tu aporte!" : ""}${mensajePropioHtml}</span>`;
+
+    });
+
+    tituloModal.innerHTML = chair.nombre;
+
+    textoModal.innerHTML =
+`Meta: <strong>$${meta.toLocaleString("es-CO")}</strong><br>
+Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong>`;
+
+    listaAportesModal.innerHTML = listaDonantes
+        ? `<strong>Aportes recibidos</strong><div class="grid-donaciones">${listaDonantes}</div>`
+        : `<strong>Aportes recibidos</strong><p class="sin-aportes">Aún no hay aportes para esta silla.</p>`;
+
+    const metaAlcanzada = recaudado >= meta && !esSangha;
+
+    if (metaAlcanzada) {
+
+        camposAporte.style.display = "none";
+
+        pagoInfo.style.display = "none";
+
+        btnEnviar.style.display = "none";
+
+        textoModal.innerHTML +=
+        "<br><br>✅ ESTA SILLA ALCANZÓ SU META, PERO HAY MÁS!! Busca los puntos grises!";
+
+    } else {
+
+        camposAporte.style.display = "block";
+
+        pagoInfo.style.display = "flex";
+
+        btnEnviar.style.display = "block";
+
+    }
+
+    modal.style.display = "flex";
+
+}
 
 // ===============================
 // DIBUJAR SILLAS
@@ -36,9 +276,15 @@ function dibujarSillas(){
 
         punto.className="chair";
         const recaudado = aportesPorSilla[chair.nombre] || 0;
+        const meta = metasPorSilla[chair.nombre] || 0;
+        const esSangha = chair.nombre === SILLA_SANGHA;
 
-if (recaudado >= chair.meta) {
+if (recaudado >= meta && !esSangha) {
     punto.classList.add("completa");
+}
+
+if (esSangha && !todasLasDemasSillasCompletas()) {
+    punto.classList.add("bloqueada");
 }
 
         punto.style.left=`calc(${chair.x}% - 17px)`;
@@ -49,48 +295,23 @@ if (recaudado >= chair.meta) {
 
 
 
-        // Abrir formulario con doble clic
+        // Abrir formulario con un solo clic
 
-        punto.ondblclick=()=>{
+        punto.onclick=()=>{
 
-            sillaActual = chair;
+            const esSangha = chair.nombre === SILLA_SANGHA;
 
-const recaudado = aportesPorSilla[chair.nombre] || 0;
-const donantes = estadoDonaciones.filter(
-    d => d.silla === chair.nombre
-);
-let listaDonantes = "";
+            if (esSangha && !todasLasDemasSillasCompletas()) {
 
-donantes.forEach(d => {
+                mostrarTooltipSangha(punto);
 
-    listaDonantes +=
-        `❤️ $${d.valor.toLocaleString("es-CO")}<br>`;
+                return;
 
-});
-tituloModal.innerHTML = chair.nombre;
+            }
 
-textoModal.innerHTML =
-`Meta: <strong>$${chair.meta.toLocaleString("es-CO")}</strong><br>
-Recaudado: <strong>$${recaudado.toLocaleString("es-CO")}</strong><br><br>
+            ocultarMensajeModal();
 
-<strong>Aportes recibidos</strong><br>
-
-${listaDonantes || "Aún no hay aportes para esta silla."}`;
-
-if (recaudado >= chair.meta) {
-
-    btnEnviar.style.display = "none";
-
-    textoModal.innerHTML +=
-    "<br><br>✅ ESTA SILLA ALCANZÓ SU META, PERO HAY MÁS!! Busca los puntos grires!";
-
-} else {
-
-    btnEnviar.style.display = "block";
-
-}
-
-modal.style.display = "flex";
+            abrirModalSilla(chair);
 
         }
 
@@ -116,7 +337,9 @@ modal.style.display = "flex";
 }
 
 dibujarSillas();
-cargarEstado();
+cargarEstado().finally(() => {
+    document.getElementById("overlayCargaPagina").classList.remove("visible");
+});
 
 
 
@@ -183,17 +406,13 @@ y:${c.y}`
 // MODAL
 // ===============================
 
-cerrarModal.onclick=()=>{
-
-    modal.style.display="none";
-
-}
+cerrarModal.onclick = cerrarModalCompleto;
 
 window.onclick=(e)=>{
 
     if(e.target===modal){
 
-        modal.style.display="none";
+        cerrarModalCompleto();
 
     }
 
@@ -206,17 +425,18 @@ window.onclick=(e)=>{
 // ===============================
 
 btnEnviar.onclick = async () => {
-    console.log("Botón presionado");
 
-       const nombre = document.getElementById("nombre").value.trim();
+    const nombre = document.getElementById("nombre").value.trim();
 
     const valor = document.getElementById("valor").value;
 
     const mensaje = document.getElementById("mensaje").value.trim();
-const email = document.getElementById("email").value.trim();
+    const idTransaccion = document.getElementById("idTransaccion").value.trim();
+    const email = document.getElementById("email").value.trim();
+
     if (nombre === "") {
 
-        alert("Por favor escribe tu nombre.");
+        mostrarMensajeModal("error", "Por favor escribe tu nombre.");
 
         return;
 
@@ -224,23 +444,29 @@ const email = document.getElementById("email").value.trim();
 
     if (valor === "" || Number(valor) <= 0) {
 
-        alert("Ingresa el valor de tu aporte.");
+        mostrarMensajeModal("error", "Ingresa el valor de tu aporte.");
 
         return;
 
     }
 
-    const datos = {
+    if (idTransaccion === "") {
 
-        silla: sillaActual.nombre,
+        mostrarMensajeModal("error", "Ingresa el ID de la transacción del pago.");
 
-        nombre,
+        return;
 
-        valor,
+    }
 
-        mensaje
+    if (email === "") {
 
-    };
+        mostrarMensajeModal("error", "Ingresa tu correo electrónico.");
+
+        return;
+
+    }
+
+    iniciarCargaEnvio();
 
     try {
 
@@ -250,52 +476,134 @@ const email = document.getElementById("email").value.trim();
 
                 method: "POST",
 
-body: new URLSearchParams({
-    silla: sillaActual.nombre,
-    nombre: nombre,
-    valor: valor,
-    mensaje: mensaje,
-    email: email
-})
+                body: new URLSearchParams({
+                    silla: sillaActual.nombre,
+                    nombre: nombre,
+                    valor: valor,
+                    mensaje: mensaje,
+                    idTransaccion: idTransaccion,
+                    email: email
+                })
 
             }
 
         );
 
         const texto = await respuesta.text();
-console.log(texto);
-const resultado = JSON.parse(texto);
-
+        const resultado = JSON.parse(texto);
 
         if (resultado.ok) {
 
-            alert("🙏 ¡Muchas gracias! Tu aporte quedó registrado.");
+            ultimoAporteIdTransaccion = idTransaccion;
 
             document.getElementById("nombre").value = "";
 
             document.getElementById("valor").value = "";
 
             document.getElementById("mensaje").value = "";
-await cargarEstado();
-            modal.style.display = "none";
+
+            document.getElementById("idTransaccion").value = "";
+
+            document.getElementById("email").value = "";
+
+            if (resultado.donaciones) {
+                aplicarEstado(resultado);
+            } else {
+                await cargarEstado();
+            }
+
+            abrirModalSilla(sillaActual);
+
+            camposAporte.style.display = "none";
+
+            pagoInfo.style.display = "none";
+
+            btnEnviar.style.display = "none";
+
+            modalCuerpo.scrollTop = 0;
+
+            mostrarMensajeModal("exito", "🙏 ¡Muchas gracias! Tu aporte quedó registrado.");
 
         } else {
 
-    alert(resultado.error);
+            if (resultado.donaciones) {
+                aplicarEstado(resultado);
+            } else {
+                await cargarEstado();
+            }
 
-    await cargarEstado();
+            abrirModalSilla(sillaActual);
 
-}
+            mostrarMensajeModal("error", resultado.error);
+
+        }
 
     } catch (error) {
 
-        alert("No fue posible conectar con el servidor.");
+        mostrarMensajeModal("error", "No fue posible conectar con el servidor.");
 
         console.error(error);
+
+    } finally {
+
+        finalizarCargaEnvio();
 
     }
 
 };
+function aplicarEstado(estado){
+
+    metasPorSilla = estado.metas || {};
+
+    estadoDonaciones = estado.donaciones;
+    const lista = document.getElementById("listaDonantes");
+
+    lista.innerHTML = "";
+
+    estadoDonaciones.forEach(d => {
+
+        if (d.mensaje && String(d.mensaje).trim() !== "") {
+
+            lista.innerHTML += `
+                <div class="mensaje-donacion">
+                    ❤️ <strong>${d.nombre}</strong><br>
+                    ${d.mensaje}
+                </div>
+            `;
+
+        }
+
+    });
+
+    aportesPorSilla = {};
+
+    estado.donaciones.forEach(d => {
+
+        if (!aportesPorSilla[d.silla]) {
+
+            aportesPorSilla[d.silla] = 0;
+
+        }
+
+        aportesPorSilla[d.silla] += Number(d.valor) || 0;
+
+    });
+
+    dibujarSillas();
+
+    document.getElementById("dineroTotal").innerHTML =
+        "$" + estado.recaudado.toLocaleString("es-CO");
+
+    const porcentaje = estado.recaudado / estado.meta * 100;
+
+    document.getElementById("barraProgreso").style.width =
+        porcentaje + "%";
+
+    document.getElementById("porcentajeGeneral").innerHTML =
+        porcentaje.toFixed(1) + "% de $" + estado.meta.toLocaleString("es-CO");
+
+}
+
 async function cargarEstado() {
 
     try {
@@ -305,52 +613,8 @@ async function cargarEstado() {
         );
 
         const estado = await respuesta.json();
-        estadoDonaciones = estado.donaciones;
-        const lista = document.getElementById("listaDonantes");
 
-lista.innerHTML = "";
-
-estadoDonaciones.forEach(d => {
-
-    if (d.mensaje && d.mensaje.trim() !== "") {
-
-        lista.innerHTML += `
-            <div class="mensaje-donacion">
-                ❤️ <strong>${d.nombre}</strong><br>
-                ${d.mensaje}
-            </div>
-        `;
-
-    }
-
-});
-console.log(estado.donaciones);
-aportesPorSilla = {};
-
-estado.donaciones.forEach(d => {
-
-    if (!aportesPorSilla[d.silla]) {
-
-        aportesPorSilla[d.silla] = 0;
-
-    }
-
-    aportesPorSilla[d.silla] += d.valor;
-
-});
-dibujarSillas();
-
-console.log(aportesPorSilla);
-        document.getElementById("dineroTotal").innerHTML =
-            "$" + estado.recaudado.toLocaleString("es-CO");
-
-        const porcentaje = estado.recaudado / estado.meta * 100;
-
-        document.getElementById("barraProgreso").style.width =
-            porcentaje + "%";
-
-        document.getElementById("porcentajeGeneral").innerHTML =
-            porcentaje.toFixed(1) + "% de $" + estado.meta.toLocaleString("es-CO");
+        aplicarEstado(estado);
 
     } catch (error) {
 
