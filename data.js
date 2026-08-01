@@ -4,24 +4,24 @@ const chairs = [
     id:1,
     nombre:"Silla Tilopa",
     meta:125000,
-    x:53.5,
-    y:24.1
+    x:58.5,
+    y:26.5
 },
 
 {
     id:2,
     nombre:"Silla Naropa",
     meta:125000,
-    x:42,
-    y:21
+    x:48.5,
+    y:27.7
 },
 
 {
     id:3,
     nombre:"Silla Saraha",
     meta:125000,
-    x:37.8,
-    y:28.4
+    x:38.5,
+    y:28.8
 },
 
 {
@@ -29,15 +29,15 @@ const chairs = [
     nombre:"Silla Nagarjuna",
     meta:125000,
     x:28.5,
-    y:30.7
+    y:30
 },
 
 {
     id:5,
     nombre:"Silla Virupa",
     meta:125000,
-    x:69.3,
-    y:23.8
+    x:68.5,
+    y:25.4
 },
 
 {
@@ -45,7 +45,7 @@ const chairs = [
     nombre:"Silla Kanhapa",
     meta:125000,
     x:78.5,
-    y:25.5
+    y:24.2
 },
 
 {
@@ -53,15 +53,15 @@ const chairs = [
     nombre:"Silla Kukuripa",
     meta:125000,
     x:90.2,
-    y:35.9
+    y:36.1
 },
 
 {
     id:8,
     nombre:"Silla Lakshminkara",
     meta:125000,
-    x:82.6,
-    y:39.5
+    x:81,
+    y:40.3
 },
 
 {
@@ -69,15 +69,15 @@ const chairs = [
     nombre:"Silla Sukhasiddhi",
     meta:125000,
     x:62.5,
-    y:48.1
+    y:48.5
 },
 
 {
     id:10,
     nombre:"Silla Niguma",
     meta:125000,
-    x:72.8,
-    y:44.6
+    x:71.7,
+    y:44.4
 },
 
 {

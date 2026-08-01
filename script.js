@@ -20,6 +20,8 @@ const pagoInfo = document.getElementById("pagoInfo");
 
 const listaAportesModal = document.getElementById("listaAportesModal");
 
+const modalCuerpo = document.getElementById("modalCuerpo");
+
 const mensajeEstado = document.getElementById("mensajeEstado");
 
 const overlayCarga = document.getElementById("overlayCarga");
@@ -120,7 +122,7 @@ function mostrarMensajeModal(tipo, texto){
         btnOk.type = "button";
         btnOk.className = "btn-ok-mensaje";
         btnOk.textContent = "OK";
-        btnOk.onclick = ocultarMensajeModal;
+        btnOk.onclick = cerrarModalCompleto;
 
         mensajeEstado.appendChild(textoEl);
         mensajeEstado.appendChild(btnOk);
@@ -148,6 +150,16 @@ function ocultarMensajeModal(){
     mensajeEstado.className = "mensaje-estado";
 
     mensajeEstado.innerHTML = "";
+
+}
+
+function cerrarModalCompleto(){
+
+    if (envioEnCurso) return;
+
+    modal.style.display = "none";
+
+    ocultarMensajeModal();
 
 }
 
@@ -390,25 +402,13 @@ y:${c.y}`
 // MODAL
 // ===============================
 
-cerrarModal.onclick=()=>{
-
-    if (envioEnCurso) return;
-
-    modal.style.display="none";
-
-    ocultarMensajeModal();
-
-}
+cerrarModal.onclick = cerrarModalCompleto;
 
 window.onclick=(e)=>{
 
     if(e.target===modal){
 
-        if (envioEnCurso) return;
-
-        modal.style.display="none";
-
-        ocultarMensajeModal();
+        cerrarModalCompleto();
 
     }
 
@@ -505,6 +505,14 @@ btnEnviar.onclick = async () => {
             await cargarEstado();
 
             abrirModalSilla(sillaActual);
+
+            camposAporte.style.display = "none";
+
+            pagoInfo.style.display = "none";
+
+            btnEnviar.style.display = "none";
+
+            modalCuerpo.scrollTop = 0;
 
             mostrarMensajeModal("exito", "🙏 ¡Muchas gracias! Tu aporte quedó registrado.");
 
