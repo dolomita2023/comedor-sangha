@@ -562,16 +562,13 @@ function aplicarEstado(estado){
 
     estadoDonaciones.forEach(d => {
 
-        if (d.mensaje && String(d.mensaje).trim() !== "") {
+        const tieneMensaje = d.mensaje && String(d.mensaje).trim() !== "";
 
-            lista.innerHTML += `
-                <div class="mensaje-donacion">
-                    ❤️ <strong>${d.nombre}</strong><br>
-                    ${d.mensaje}
-                </div>
-            `;
-
-        }
+        lista.innerHTML += `
+            <div class="mensaje-donacion">
+                ❤️ <strong>${d.nombre}</strong>${tieneMensaje ? `<br>${d.mensaje}` : ""}
+            </div>
+        `;
 
     });
 

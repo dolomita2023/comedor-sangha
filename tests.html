@@ -113,7 +113,8 @@
             },
             donaciones: [
                 { silla:"Silla Tilopa", nombre:"Donante Uno", valor:125000, idTransaccion:"AAA1", mensaje:"Mensaje de prueba", email:"uno@test.com" },
-                { silla:"Silla Naropa", nombre:"Donante Dos", valor:125000, idTransaccion:12345, mensaje:1, email:"dos@test.com" }
+                { silla:"Silla Naropa", nombre:"Donante Dos", valor:125000, idTransaccion:12345, mensaje:1, email:"dos@test.com" },
+                { silla:"Silla Saraha", nombre:"Donante Sin Mensaje", valor:1000, idTransaccion:"AAA3", mensaje:"", email:"tres@test.com" }
             ]
         };
 
@@ -199,6 +200,12 @@
                 "aplicarEstado tolera mensaje numérico sin romper (bug histórico)",
                 document.getElementById("dineroTotal").textContent.includes("250.000"),
                 document.getElementById("dineroTotal").textContent
+            );
+
+            assert(
+                "Generosidad Compartida muestra donantes SIN mensaje también",
+                document.getElementById("listaDonantes").innerHTML.includes("Donante Sin Mensaje"),
+                document.getElementById("listaDonantes").innerHTML
             );
 
             // ---- 2. Silla completa oculta form/QR/botón ----
