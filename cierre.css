@@ -1,0 +1,97 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    min-height:100vh;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color:#3f3b36;
+    background:
+        linear-gradient(rgba(109,139,87,.82), rgba(109,139,87,.88)),
+        url("assets/comedor.jpg") center / cover fixed no-repeat;
+}
+
+.cierre{
+    width:100%;
+    max-width:560px;
+    margin:0 auto;
+    padding:20px 16px 48px;
+}
+
+.tarjeta-gracias{
+    background:#fffdf7;
+    border-radius:22px;
+    padding:32px 24px 28px;
+    text-align:center;
+    box-shadow:0 12px 32px rgba(0,0,0,.18);
+}
+
+.hoja{
+    font-size:38px;
+    line-height:1;
+    margin-bottom:12px;
+}
+
+.tarjeta-gracias h1{
+    font-size:1.9rem;
+    color:#4d5c39;
+    margin-bottom:10px;
+}
+
+.lema{
+    font-size:1.15rem;
+    font-weight:700;
+    color:#6d8b57;
+    margin-bottom:18px;
+}
+
+.texto{
+    font-size:1rem;
+    line-height:1.55;
+    max-width:340px;
+    margin:0 auto 18px;
+}
+
+.corazon{
+    font-size:30px;
+}
+
+.titulo-mensajes{
+    margin:34px 8px 16px;
+    text-align:center;
+    font-size:1.25rem;
+    color:#fffdf7;
+    text-shadow:0 1px 6px rgba(0,0,0,.25);
+}
+
+.lista-mensajes{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.mensaje{
+    background:rgba(255,253,247,.94);
+    border-radius:16px;
+    padding:18px 20px;
+    font-style:italic;
+    line-height:1.5;
+    box-shadow:0 6px 18px rgba(0,0,0,.12);
+    overflow-wrap:anywhere;
+}
+
+.estado{
+    text-align:center;
+    color:#fffdf7;
+    font-weight:600;
+}
+
+@media(min-width:700px){
+
+    .cierre{
+        padding-top:48px;
+    }
+
+}
